@@ -1,0 +1,7 @@
+_target_: src.datamodules.datamodule.BaseDataModule
+
+train_dir: "data/train.csv"
+val_dir: "data/val.csv"
+test_dir: "data/test.csv"
+batch_size: 96
+num_workers: 4

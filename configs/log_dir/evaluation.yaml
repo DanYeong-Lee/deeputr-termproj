@@ -2,7 +2,7 @@
 
 hydra:
   run:
-    dir: logs/evaluations/runs/${name}/${now:%Y-%m-%d}_${now:%H-%M-%S}
+    dir: logs/evaluations/runs/${name}
   sweep:
-    dir: logs/evaluations/multiruns/${name}/${now:%Y-%m-%d}_${now:%H-%M-%S}
+    dir: logs/evaluations/multiruns/${name}
     subdir: ${hydra.job.num}
