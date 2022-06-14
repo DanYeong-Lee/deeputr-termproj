@@ -6,7 +6,7 @@ model_checkpoint:
   save_last: False
   verbose: False
   dirpath: "ckpts/"
-  filename: ${seed}
+  filename: seed${seed}
   auto_insert_metric_name: False
 
 early_stopping:

@@ -1,7 +1,7 @@
 _target_: src.datamodules.datamodule.BaseDataModule
 
-train_dir: "data/train.csv"
-val_dir: "data/val.csv"
-test_dir: "data/test.csv"
+train_dir: "/data/project/danyoung/deeputr-termproj/data/train.csv"
+val_dir: "/data/project/danyoung/deeputr-termproj/data/val.csv"
+test_dir: "/data/project/danyoung/deeputr-termproj/data/test.csv"
 batch_size: 96
 num_workers: 4

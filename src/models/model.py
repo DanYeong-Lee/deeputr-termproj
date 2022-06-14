@@ -36,10 +36,6 @@ class BaseNet(pl.LightningModule):
         
         return loss
     
-    def training_epoch_end(self, outputs):
-        sch = self.lr_schedulers()
-        sch.step()
-    
     def validation_step(self, batch, batch_idx):
         loss, preds, targets = self.step(batch)
         metrics = {"val/loss": loss}
@@ -61,9 +57,9 @@ class BaseNet(pl.LightningModule):
             lr=self.hparams.lr, 
             weight_decay=self.hparams.weight_decay
         )
-        scheduler = torch.optim.lr_scheduler.StepLR(
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
-            step_size=3,
+            milestones=range(9, 50, 3),
             gamma=(1/np.exp(1)),
             verbose=True
         )
@@ -90,6 +86,6 @@ class L2Net(BaseNet):
         loss = self.criterion(pred, y)
         l2_param = list(self.parameters())[self.l2_idx]
         l2_loss = torch.linalg.norm(l2_param)
-        loss = loss + self.weight_decay * l2_loss
+        loss = loss + self.hparams.weight_decay * l2_loss
         
         return loss, pred, y

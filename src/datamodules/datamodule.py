@@ -5,30 +5,32 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 
-from src.datamodules.components.dataset import 
+from src.datamodules.components.dataset import BaseDataset
 
 
 
 class BaseDataModule(pl.LightningDataModule):
     def __init__(
         self, 
-        train_dir: str = "data/train.csv",
-        val_dir: str = "data/val.csv",
-        test_dir: str = "data/test.csv",
+        train_dir: str = "/data/project/danyoung/deeputr-termproj/data/train.csv",
+        val_dir: str = "/data/project/danyoung/deeputr-termproj/data/val.csv",
+        test_dir: str = "/data/project/danyoung/deeputr-termproj/data/test.csv",
         batch_size: int = 96, 
         num_workers: int = 4
     ):
         super().__init__()
-        self.save_hyperparameters(logger=False, ignore=[dataset])
+        self.save_hyperparameters(logger=False)
         
         self.train_data: Optional[Dataset] = None
         self.val_data: Optional[Dataset] = None
         self.test_data: Optional[Dataset] = None
         
-        self.dataset = dataset
+        self.dataset = BaseDataset
     
     def setup(self, stage=None):
         if stage == "fit" or stage == None:
+            import os
+            print(os.getcwd())
             train_df = pd.read_csv(self.hparams.train_dir)
             val_df = pd.read_csv(self.hparams.val_dir)
             self.train_data = self.dataset(train_df)
