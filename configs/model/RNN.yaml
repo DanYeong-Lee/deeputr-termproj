@@ -1,0 +1,10 @@
+_target_: src.models.model.RMSpropNet
+lr: 8e-4
+weight_decay: 0
+net:
+  _target_: src.models.components.rnn.RNN
+  hidden_size: 96
+  rnn_dropout: 0.5
+  fc_dim: [512]
+  fc_dropout: 0.1
+

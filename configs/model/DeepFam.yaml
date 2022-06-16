@@ -1,0 +1,10 @@
+_target_: src.models.model.L2Net
+lr: 5e-4
+weight_decay: 1e-1
+l2_idx: [0, 4, 8]
+net:
+  _target_: src.models.components.deepfam.DeepFam
+  kernel_sizes: [6, 9, 12]
+  out_channels:  85
+  fc_dim: [256, 1024, 64]
+

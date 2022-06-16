@@ -1,15 +1,40 @@
 import os
 from typing import List
-
+import numpy as np
 import hydra
 from omegaconf import DictConfig
+import torch
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import LightningLoggerBase
+from torchmetrics.functional import pearson_corrcoef
+from torch.nn.functional import mse_loss
 
 from src import utils
 
 log = utils.get_logger(__name__)
 
+
+def evaluate(preds, targets):
+    per_reporter_rmse = []
+    per_reporter_corr = []
+    per_timepoint_rmse = []
+    per_timepoint_corr = []
+    for i in range(preds.size(0)):
+        rmse = mse_loss(preds[i], targets[i]).sqrt().item()
+        corr = pearson_corrcoef(preds[i], targets[i]).item()
+        per_reporter_rmse.append(rmse)
+        per_reporter_corr.append(corr)
+    for j in range(preds.size(1)):
+        rmse = mse_loss(preds[:, j], targets[:, j]).sqrt().item()
+        corr = pearson_corrcoef(preds[:, j], targets[:, j]).item()
+        per_timepoint_rmse.append(rmse)
+        per_timepoint_corr.append(corr)
+    per_reporter_rmse = np.array(per_reporter_rmse)
+    per_reporter_corr = np.array(per_reporter_corr)
+    per_timepoint_rmse = np.array(per_timepoint_rmse)
+    per_timepoint_corr = np.array(per_timepoint_corr)
+    
+    return per_reporter_rmse, per_reporter_corr, per_timepoint_rmse, per_timepoint_corr
 
 def test(config: DictConfig) -> None:
     """Contains minimal example of the testing pipeline. Evaluates given checkpoint on a testset.
@@ -20,14 +45,6 @@ def test(config: DictConfig) -> None:
     Returns:
         None
     """
-
-    # Set seed for random number generators in pytorch, numpy and python.random
-    if config.get("seed"):
-        seed_everything(config.seed, workers=True)
-
-    # Convert relative ckpt path to absolute path if necessary
-    if not os.path.isabs(config.ckpt_path):
-        config.ckpt_path = os.path.join(hydra.utils.get_original_cwd(), config.ckpt_path)
 
     # Init lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
@@ -54,4 +71,22 @@ def test(config: DictConfig) -> None:
         trainer.logger.log_hyperparams({"ckpt_path": config.ckpt_path})
 
     log.info("Starting testing!")
-    trainer.test(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+    name = config.get("name")
+    seeds = config.get("seeds")
+    preds = []
+    root_dir = config.get("original_work_dir")
+    for seed in seeds:
+        ckpt_path = f"{root_dir}/logs/experiments/runs/{name}/ckpts/seed{seed}.ckpt"
+        results = trainer.predict(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        temp_pred, temp_target = [], []
+        for pred, target in results:
+            temp_pred.append(pred)
+            temp_target.append(target)
+            
+        preds.append(torch.cat(temp_pred, axis=0).unsqueeze(-1))
+        targets = torch.cat(temp_target, axis=0)
+    preds = torch.cat(preds, axis=-1).mean(-1)
+    
+    per_reporter_rmse, per_reporter_corr, per_timepoint_rmse, per_timepoint_corr = evaluate(preds, targets)
+    print(per_reporter_rmse.mean())
+    print(per_timepoint_corr.mean())
