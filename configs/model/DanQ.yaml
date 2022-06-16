@@ -1,0 +1,13 @@
+_target_: src.models.model.BaseNet
+lr: 5e-4
+weight_decay: 0
+net:
+  _target_: src.models.components.danq.DanQ
+  conv_out_dim: 256
+  conv_kernel_size: 9
+  pool_size: 3
+  rnn_hidden_dim: 256
+  fc_hidden_dim: 64
+  dropout1: 0.2
+  dropout2: 0.5
+

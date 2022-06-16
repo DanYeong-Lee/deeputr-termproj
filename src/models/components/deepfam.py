@@ -63,3 +63,4 @@ class DeepFam(nn.Module):
             x = fc(x)
         x = self.fc2(x)
         return x
+    

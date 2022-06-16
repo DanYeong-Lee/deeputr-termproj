@@ -1,5 +1,6 @@
 
-models = ["RNN", "CNN", "DeepFam"]
+#models = ["RNN", "CNN", "DeepFam"]
+models = ["DanQ"]
 seeds = list(range(10))
 
 ALL = expand("logs/experiments/runs/{model}/ckpts/seed{seed}.ckpt", model=models, seed=seeds)

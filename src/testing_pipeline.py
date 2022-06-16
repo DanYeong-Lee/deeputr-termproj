@@ -90,3 +90,4 @@ def test(config: DictConfig) -> None:
     per_reporter_rmse, per_reporter_corr, per_timepoint_rmse, per_timepoint_corr = evaluate(preds, targets)
     print(per_reporter_rmse.mean())
     print(per_timepoint_corr.mean())
+    
