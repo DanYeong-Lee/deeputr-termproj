@@ -1,10 +1,12 @@
-_target_: src.models.model.BaseNet
+_target_: src.models.model.L2Net
 lr: 5e-4
-weight_decay: 0
+weight_decay: 1e-2
+l2_idx: [0]
+lr_schedule: True
 net:
   _target_: src.models.components.danq.DanQ
   conv_out_dim: 256
-  conv_kernel_size: 9
+  conv_kernel_size: 15
   pool_size: 3
   rnn_hidden_dim: 256
   fc_hidden_dim: 64

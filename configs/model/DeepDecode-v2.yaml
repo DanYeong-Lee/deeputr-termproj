@@ -1,0 +1,13 @@
+_target_: src.models.model.L2Net
+lr: 5e-4
+weight_decay: 1e-1
+l2_idx: [0, 4, 8, 12]
+lr_schedule: True
+net:
+  _target_: src.models.components.deepdecode-v2.DeepDecode_v2
+  kernel_sizes: [6, 9, 12, 15]
+  out_channels:  256
+  embed_dim: 256
+  fc_dim: [1024, 64]
+  dropout: 0.1
+

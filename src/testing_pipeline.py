@@ -72,11 +72,15 @@ def test(config: DictConfig) -> None:
 
     log.info("Starting testing!")
     name = config.get("name")
-    seeds = config.get("seeds")
+    seed = config.get("seed")
+    
+    if type(seed) != list:
+        seed = [seed]
+        
     preds = []
     root_dir = config.get("original_work_dir")
-    for seed in seeds:
-        ckpt_path = f"{root_dir}/logs/experiments/runs/{name}/ckpts/seed{seed}.ckpt"
+    for s in seed:
+        ckpt_path = f"{root_dir}/logs/experiments/runs/{name}/ckpts/seed{s}.ckpt"
         results = trainer.predict(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         temp_pred, temp_target = [], []
         for pred, target in results:

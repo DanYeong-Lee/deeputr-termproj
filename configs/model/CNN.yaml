@@ -2,6 +2,7 @@ _target_: src.models.model.L2Net
 lr: 5e-4
 weight_decay: 1e-1
 l2_idx: [0]
+lr_schedule: True
 net:
   _target_: src.models.components.cnn.CNN
   kernel_size:  9

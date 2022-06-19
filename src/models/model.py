@@ -5,6 +5,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from torchmetrics import MinMetric, MeanSquaredError
+
 
 
 class BaseNet(pl.LightningModule):
@@ -13,14 +15,20 @@ class BaseNet(pl.LightningModule):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
+        lr_schedule: bool = True
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["net"])
         self.net = net
         self.criterion = nn.MSELoss()
+        self.val_loss = MeanSquaredError()
+        self.val_loss_best = MinMetric()
         
     def forward(self, x, init_level):
         return self.net(x, init_level)
+    
+    def on_train_start(self):
+        self.val_loss_best.reset()
     
     def step(self, batch):
         x, init_level, y = batch
@@ -38,9 +46,16 @@ class BaseNet(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         loss, preds, targets = self.step(batch)
+        self.val_loss.update(preds, targets)
         metrics = {"val/loss": loss}
         self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
-
+    
+    def validation_epoch_end(self, outputs):
+        epoch_loss = self.val_loss.compute()
+        self.val_loss_best.update(epoch_loss)
+        self.log("val/loss_best", self.val_loss_best.compute(), on_epoch=True, prog_bar=True)
+        self.val_loss.reset()
+        
     def test_step(self, batch, batch_idx):
         loss, preds, targets = self.step(batch)
         metrics = {"test/loss": loss}
@@ -57,14 +72,17 @@ class BaseNet(pl.LightningModule):
             lr=self.hparams.lr, 
             weight_decay=0
         )
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=range(9, 50, 3),
-            gamma=(1/np.exp(1)),
-            verbose=True
-        )
-        
-        return [optimizer], [scheduler]
+        if self.hparams.lr_schedule:
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=range(9, 50, 3),
+                gamma=(1/np.exp(1)),
+                verbose=True
+            )
+
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
     
     
     
@@ -74,9 +92,10 @@ class L2Net(BaseNet):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
+        lr_schedule: bool = True,
         l2_idx: List[int] = [0]
     ):
-        super().__init__(net, lr, weight_decay)
+        super().__init__(net, lr, weight_decay, lr_schedule)
         self.l2_idx = l2_idx
         
         
@@ -102,8 +121,9 @@ class RMSpropNet(BaseNet):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
+        lr_schedule: bool = True
     ):
-        super().__init__(net, lr, weight_decay)
+        super().__init__(net, lr, weight_decay, lr_schedule)
     
     def configure_optimizers(self):
         optimizer = torch.optim.RMSprop(
@@ -111,11 +131,14 @@ class RMSpropNet(BaseNet):
             lr=self.hparams.lr, 
             weight_decay=0
         )
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=range(9, 50, 3),
-            gamma=(1/np.exp(1)),
-            verbose=True
-        )
-        
-        return [optimizer], [scheduler]
+        if self.hparams.lr_schedule:
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=range(9, 50, 3),
+                gamma=(1/np.exp(1)),
+                verbose=True
+            )
+
+            return [optimizer], [scheduler]
+        else:
+            return optimizer

@@ -11,15 +11,13 @@ class ConvBlock(nn.Module):
         input_dim: int = 4,
         out_dim: int = 256,
         kernel_size: int = 9,
-        pool_size: int = 3,
-        dropout: float = 0.2
+        pool_size: int = 3
     ):
         super().__init__()
         self.main = nn.Sequential(
             nn.Conv1d(in_channels=input_dim, out_channels=out_dim, kernel_size=kernel_size, padding="same"),
             nn.BatchNorm1d(out_dim),
             nn.ReLU(),
-            nn.Dropout(dropout),
             nn.MaxPool1d(pool_size)
         )
     
@@ -32,30 +30,38 @@ class ConvBlock(nn.Module):
 class DeepFamQ(nn.Module):
     def __init__(
         self,
-        conv_out_dim: int = 256,
-        conv_kernel_size: List = [6, 9],
+        kernel_sizes: List = [6, 9, 12, 15],
+        out_channels: int = 256,
         pool_size: int = 3,
         rnn_hidden_dim: int = 256,
-        fc_hidden_dim: int = 64,
-        dropout1: float = 0.2,
-        dropout2: float = 0.5
+        fc_dim: List[int] = [256, 1024, 64],
+        dropout: float = 0.2,
     ):
         super().__init__()
         pool_out_len = int(1 + ((110 - pool_size) / pool_size))
-        fc_input_dim = rnn_hidden_dim * 2
-        conv_each_dim = int(conv_out_dim / len(conv_kernel_size))
+        fc_input_dim = rnn_hidden_dim * 2 * pool_out_len
         
-        self.conv_blocks = nn.ModuleList([ConvBlock(4, conv_each_dim, k, pool_size, dropout1) for k in conv_kernel_size])
-        self.rnn = nn.GRU(input_size=conv_out_dim, hidden_size=rnn_hidden_dim, bidirectional=True)
+        self.conv_blocks = nn.ModuleList([ConvBlock(4, out_channels, k, pool_size) for k in kernel_sizes])
+        self.rnn = nn.GRU(input_size=out_channels * len(kernel_sizes), hidden_size=rnn_hidden_dim, bidirectional=True)
         self.flat = nn.Flatten()
-        self.fc = nn.Sequential(
-            nn.Linear(fc_input_dim + 1, fc_hidden_dim),
+        self.fc1 = nn.Sequential(
+            nn.Linear(fc_input_dim + 1, fc_dim[0]),
             nn.ReLU(),
-            nn.Dropout(dropout2),
-            nn.Linear(fc_hidden_dim, fc_hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(dropout2),
-            nn.Linear(fc_hidden_dim, 8)
+            nn.Dropout(dropout)
+        )
+        
+        self.fc_layers = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(fc_dim[i], fc_dim[i+1]),
+                    nn.ReLU(),
+                    nn.Dropout(dropout)
+                )
+                for i in range(len(fc_dim) - 1)
+            ]
+        )
+        self.fc2 = nn.Sequential(
+            nn.Linear(fc_dim[-1], 8)
         )
         
     def forward(self, x, init_level):
@@ -66,10 +72,14 @@ class DeepFamQ(nn.Module):
             conv_outs.append(conv(x))
         x = torch.cat(conv_outs, dim=1)  # (N, C, L)
         x = x.permute(2, 0, 1)  # (L, N, C)
-        _, x = self.rnn(x)  # (2, N, C)
-        x = x.transpose(0, 1)  # (N, 2, C)
+        x, _ = self.rnn(x)  # (L, N, C)
+        x = x.transpose(0, 1)  # (N, L, C)
         x = self.flat(x)  # (N, C)
         x = torch.cat([x, init_level.unsqueeze(1)], axis=1)
-        x = self.fc(x)
+        x = self.fc1(x)
+        for fc in self.fc_layers:
+            x = fc(x)
+        x = self.fc2(x)
         
         return x
+    

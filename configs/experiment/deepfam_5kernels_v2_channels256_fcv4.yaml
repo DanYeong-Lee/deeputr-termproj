@@ -1,0 +1,33 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: default.yaml
+  - override /model: DeepFam.yaml
+  - override /callbacks: default.yaml
+  #- override /logger: wandb.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "DeepFam_5kernels_v2_channels256_fcv4"
+
+seed: 42
+
+trainer:
+  min_epochs: 1
+  max_epochs: 50
+  gpus: [1]
+
+model:
+  lr: 5e-4
+  weight_decay: 1e-1
+  l2_idx: [0, 4, 8, 12, 16]
+  net:
+    kernel_sizes: [6, 9, 12, 15, 18]
+    out_channels: 256
+    fc_dim: [256, 2048, 64]

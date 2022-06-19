@@ -4,10 +4,11 @@ weight_decay: 1e-1
 l2_idx: [0, 4, 8, 12]
 lr_schedule: True
 net:
-  _target_: src.models.components.deepfamq.DeepFamQ
+  _target_: src.models.components.trfmdecode.TRFMDecode
   kernel_sizes: [6, 9, 12, 15]
   out_channels: 256
   pool_size: 3
-  rnn_hidden_dim: 256
-  fc_dim: [256, 1024, 64]
-  dropout: 0.2
+  d_model: 256
+  nhead: 8
+  dim_feedforward: 2048
+

@@ -1,9 +1,8 @@
 
-#models = ["RNN", "CNN", "DeepFam"]
-models = ["DanQ"]
+experiments = ["deepfam_4kernels_channels256", "deepfam_5kernels_channels256"]
 seeds = list(range(10))
 
-ALL = expand("logs/experiments/runs/{model}/ckpts/seed{seed}.ckpt", model=models, seed=seeds)
+ALL = expand("logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt", experiment=experiments, seed=seeds)
 
 rule all:
     input:
@@ -11,10 +10,9 @@ rule all:
         
 rule train:
     output:
-        "logs/experiments/runs/{model}/ckpts/seed{seed}.ckpt"
+        "logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt"
     shell:
         "python train.py "
-        "model={wildcards.model} "
-        "name={wildcards.model} "
+        "experiment={wildcards.experiment} "
         "trainer.gpus=[1] "
         "seed={wildcards.seed}"

@@ -1,6 +1,7 @@
 _target_: src.models.model.RMSpropNet
 lr: 8e-4
 weight_decay: 0
+lr_schedule: True
 net:
   _target_: src.models.components.rnn.RNN
   hidden_size: 96
