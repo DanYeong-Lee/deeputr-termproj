@@ -1,0 +1,15 @@
+_target_: src.models.model.L2Net
+lr: 5e-4
+weight_decay: 1e-1
+l2_idx: [0, 4, 8, 12]
+lr_schedule: True
+net:
+  _target_: src.models.components.cnnrnntrfm.CNNRNNTRFM
+  kernel_sizes: [6, 9, 12, 15]
+  out_channels: 256
+  pool_size: 3
+  rnn_hidden_dim: 256
+  d_model: 256
+  nhead: 8
+  dim_feedforward: 2048
+

@@ -45,19 +45,21 @@ class Encoder(nn.Module):
         
         return x
 
-class TRFMDecode(nn.Module):
+class CNNRNNTRFM(nn.Module):
     def __init__(
         self,
         kernel_sizes: List = [6, 9, 12, 15],
         out_channels: int = 256,
         pool_size: int = 3,
+        rnn_hidden_dim: int = 256,
         d_model: int = 256,
         nhead: int = 8,
         dim_feedforward: int = 2048
     ):
         super().__init__()
         self.encoder = Encoder(kernel_sizes, out_channels, pool_size)
-        self.fc1 = nn.Linear(len(kernel_sizes) * out_channels, d_model)
+        self.rnn = nn.GRU(input_size=len(kernel_sizes) * out_channels, hidden_size=rnn_hidden_dim, bidirectional=True, batch_first=True)
+        self.fc1 = nn.Linear(rnn_hidden_dim * 2, d_model)
         self.decoder = nn.TransformerDecoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward)
         self.embed_tgt = nn.Linear(1, d_model)
         self.out = nn.Linear(d_model, 1)
@@ -67,6 +69,7 @@ class TRFMDecode(nn.Module):
         # x: (N, L, C)
         x = self.encoder(x)  # (N, C, L)
         x = x.transpose(1, 2)  # (N, L, C)
+        x, _ = self.rnn(x)  # (N, L, C)
         x = self.fc1(x)  # (N, L, d_model)
         x = x.transpose(0, 1)  # (L, N, d_model)
         tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
