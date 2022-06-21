@@ -116,7 +116,7 @@ class MultiCNNRNNTRFM(nn.Module):
         x = self.fc1(x)  # (N, L, d_model)
         x = x.transpose(0, 1)  # (L, N, d_model)
         init_level = torch.cat([plus_init.unsqueeze(-1), minus_init.unsqueeze(-1)], axis=1)
-        tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
+        tgt = self.embed_tgt(init_level)  # (N, d_model)
         tgt = tgt.unsqueeze(0)  # (1, N, d_model)
                 
         outputs = []
