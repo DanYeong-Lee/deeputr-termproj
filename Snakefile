@@ -1,6 +1,6 @@
 
-experiments = ["deepfam_4kernels_channels256", "deepfam_5kernels_channels256"]
-seeds = list(range(10))
+experiments = ["rnn_base"]
+seeds = list(range(1, 10))
 
 ALL = expand("logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt", experiment=experiments, seed=seeds)
 

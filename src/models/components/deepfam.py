@@ -26,7 +26,7 @@ class ConvBlock(nn.Module):
 class DeepFam(nn.Module):
     def __init__(
         self,
-        kernel_sizes: List[int] = [6, 9, 12],
+        kernel_sizes: List[int] = [6, 9, 12, 15],
         out_channels: int = 256,
         fc_dim: List[int] = [256, 1024, 64]
     ):

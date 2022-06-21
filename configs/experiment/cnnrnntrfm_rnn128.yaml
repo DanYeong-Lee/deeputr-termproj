@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: default.yaml
-  - override /model: TrfmDecode.yaml
+  - override /model: CNNRNNTRFM.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,14 +14,14 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "trfmdecode_base"
+name: "cnnrnntrfm_rnn128"
 
 seed: 42
 
 trainer:
   min_epochs: 1
   max_epochs: 50
-  gpus: [1]
+  gpus: [0]
 
 model:
   lr: 5e-4
@@ -31,6 +31,7 @@ model:
     kernel_sizes: [6, 9, 12, 15]
     out_channels: 256
     pool_size: 3
+    rnn_hidden_dim: 128
     d_model: 256
     nhead: 8
     dim_feedforward: 2048

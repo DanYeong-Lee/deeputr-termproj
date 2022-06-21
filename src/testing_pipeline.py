@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List
 import numpy as np
 import hydra
@@ -74,7 +75,7 @@ def test(config: DictConfig) -> None:
     name = config.get("name")
     seed = config.get("seed")
     
-    if type(seed) != list:
+    if type(seed) == int:
         seed = [seed]
         
     preds = []
