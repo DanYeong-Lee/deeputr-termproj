@@ -83,7 +83,28 @@ class BaseNet(pl.LightningModule):
             return [optimizer], [scheduler]
         else:
             return optimizer
+
     
+class MultiNet(BaseNet):
+    def __init__(
+        self,
+        net: nn.Module,
+        lr: float = 5e-4,
+        weight_decay: float = 0,
+        lr_schedule: bool = True
+    ):
+        super().__init__(net, lr, weight_decay, lr_schedule)
+        
+    def forward(self, x, plus_init, minus_init):
+        return self.net(x, plus_init, minus_init)
+    
+    def step(self, batch):
+        x, plus_init, minus_init, plus_y, minus_y = batch
+        pred = self(x, plus_init, minus_init)
+        y = torch.cat([plus_y, minus_y], axis=1)
+        loss = self.criterion(pred, y)
+        
+        return loss, pred, y
     
     
 class L2Net(BaseNet):
@@ -114,6 +135,47 @@ class L2Net(BaseNet):
         
         return loss
     
+
+class MultiL2Net(BaseNet):
+    def __init__(
+        self,
+        net: nn.Module,
+        lr: float = 5e-4,
+        weight_decay: float = 0,
+        lr_schedule: bool = True,
+        l2_idx: List[int] = [0]
+    ):
+        super().__init__(net, lr, weight_decay, lr_schedule)
+        self.l2_idx = l2_idx
+    
+    def forward(self, x, plus_init, minus_init):
+        return self.net(x, plus_init, minus_init)
+    
+    def step(self, batch):
+        x, plus_init, minus_init, plus_y, minus_y = batch
+        pred = self(x, plus_init, minus_init)
+        y = torch.cat([plus_y, minus_y], axis=1)
+        loss = self.criterion(pred, y)
+        
+        return loss, pred, y
+        
+    def training_step(self, batch, batch_idx):
+        x, plus_init, minus_init, plus_y, minus_y = batch
+        pred = self(x, plus_init, minus_init)
+        y = torch.cat([plus_y, minus_y], axis=1)
+        loss = self.criterion(pred, y)
+        # L2 regularization
+        params = list(self.parameters())
+        for idx in self.l2_idx:
+            l2_param = params[idx]
+            l2_loss = torch.linalg.norm(l2_param)
+            loss = loss + self.hparams.weight_decay * l2_loss
+        
+        metrics = {"train/loss": loss}
+        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
+        
+        return loss
+    
     
 class RMSpropNet(BaseNet):
     def __init__(
@@ -127,6 +189,35 @@ class RMSpropNet(BaseNet):
     
     def configure_optimizers(self):
         optimizer = torch.optim.RMSprop(
+            self.parameters(), 
+            lr=self.hparams.lr, 
+            weight_decay=0
+        )
+        if self.hparams.lr_schedule:
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=range(9, 50, 3),
+                gamma=(1/np.exp(1)),
+                verbose=True
+            )
+
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
+        
+
+class MultiNAdamNet(MultiNet):
+    def __init__(
+        self,
+        net: nn.Module,
+        lr: float = 5e-4,
+        weight_decay: float = 0,
+        lr_schedule: bool = True
+    ):
+        super().__init__(net, lr, weight_decay, lr_schedule)
+        
+    def configure_optimizers(self):
+        optimizer = torch.optim.NAdam(
             self.parameters(), 
             lr=self.hparams.lr, 
             weight_decay=0

@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 
-from src.datamodules.components.dataset import BaseDataset
+from src.datamodules.components.dataset import BaseDataset, MultiDataset
 
 
 
@@ -16,7 +16,8 @@ class BaseDataModule(pl.LightningDataModule):
         val_dir: str = "/data/project/danyoung/deeputr-termproj/data/val.csv",
         test_dir: str = "/data/project/danyoung/deeputr-termproj/data/test.csv",
         batch_size: int = 96, 
-        num_workers: int = 4
+        num_workers: int = 4,
+        multi: bool = False
     ):
         super().__init__()
         self.save_hyperparameters(logger=False)
@@ -25,7 +26,10 @@ class BaseDataModule(pl.LightningDataModule):
         self.val_data: Optional[Dataset] = None
         self.test_data: Optional[Dataset] = None
         
-        self.dataset = BaseDataset
+        if multi:
+            self.dataset = MultiDataset
+        else:
+            self.dataset = BaseDataset
     
     def setup(self, stage=None):
         if stage == "fit" or stage == None:

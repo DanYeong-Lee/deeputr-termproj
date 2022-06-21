@@ -60,3 +60,42 @@ class CNN(nn.Module):
             x = fc(x)
         x = self.fc2(x)
         return x
+    
+
+class MultiCNN(nn.Module):
+    def __init__(
+        self,
+        kernel_size: int = 9,
+        out_channels: int = 256,
+        fc_dim: List[int] = [256, 1024, 64]
+    ):
+        super().__init__()
+        self.conv_block = ConvBlock(kernel_size, out_channels)
+        self.fc1 = nn.Sequential(
+            nn.Linear(out_channels + 2, fc_dim[0]),
+            nn.ReLU()
+        )
+        
+        self.fc_layers = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(fc_dim[i], fc_dim[i+1]),
+                    nn.ReLU()    
+                )
+                for i in range(len(fc_dim) - 1)
+            ]
+        )
+        self.fc2 = nn.Sequential(
+            nn.Linear(fc_dim[-1], 16)
+        )
+        
+    def forward(self, x, plus_init, minus_init):
+        # x: (N, L, C)
+        x = x.transpose(1, 2)
+        x = self.conv_block(x)
+        x = torch.cat([x, plus_init.unsqueeze(1), minus_init.unsqueeze(1)], axis=1)
+        x = self.fc1(x)
+        for fc in self.fc_layers:
+            x = fc(x)
+        x = self.fc2(x)
+        return x

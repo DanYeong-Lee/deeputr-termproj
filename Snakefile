@@ -1,6 +1,6 @@
 
-experiments = ["rnn_base"]
-seeds = list(range(1, 10))
+experiments = ["multi_cnn", "multi_rnn"]
+seeds = list(range(10))
 
 ALL = expand("logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt", experiment=experiments, seed=seeds)
 

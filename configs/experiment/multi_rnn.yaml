@@ -4,8 +4,8 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: default.yaml
-  - override /model: DeepDecode-v2.yaml
+  - override /datamodule: multi.yaml
+  - override /model: RNN.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,22 +14,26 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "deepdecode-v2_mlp_v2_embed128"
+name: "multi_rnn"
 
 seed: 42
+
+datamodule:
+  batch_size: 16
 
 trainer:
   min_epochs: 1
   max_epochs: 50
-  gpus: [1]
+  gpus: [0]
 
 model:
+  _target_: src.models.model.MultiNAdamNet
   lr: 5e-4
-  weight_decay: 1e-1
-  l2_idx: [0, 4, 8, 12]
+  weight_decay: 0
+  lr_schedule: False
   net:
-    kernel_sizes: [6, 9, 12, 15]
-    out_channels:  256
-    embed_dim: 128
-    fc_dim: [512, 64]
-    dropout: 0.1
+    _target_: src.models.components.rnn.MultiRNN
+    hidden_size: 192
+    rnn_dropout: 0.5
+    fc_dim: [512]
+    fc_dropout: 0

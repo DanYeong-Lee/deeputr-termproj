@@ -86,3 +86,49 @@ class CNNRNNTRFM(nn.Module):
         outputs = torch.cat(outputs, axis=1)  # (N, 8)
 
         return outputs
+    
+    
+class MultiCNNRNNTRFM(nn.Module):
+    def __init__(
+        self,
+        kernel_sizes: List = [6, 9, 12, 15],
+        out_channels: int = 256,
+        pool_size: int = 3,
+        rnn_hidden_dim: int = 256,
+        d_model: int = 256,
+        nhead: int = 8,
+        dim_feedforward: int = 2048
+    ):
+        super().__init__()
+        self.encoder = Encoder(kernel_sizes, out_channels, pool_size)
+        self.rnn = nn.GRU(input_size=len(kernel_sizes) * out_channels, hidden_size=rnn_hidden_dim, bidirectional=True, batch_first=True)
+        self.fc1 = nn.Linear(rnn_hidden_dim * 2, d_model)
+        self.decoder = nn.TransformerDecoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward)
+        self.embed_tgt = nn.Linear(2, d_model)
+        self.out = nn.Linear(d_model, 2)
+        
+        
+    def forward(self, x, plus_init, minus_init):
+        # x: (N, L, C)
+        x = self.encoder(x)  # (N, C, L)
+        x = x.transpose(1, 2)  # (N, L, C)
+        x, _ = self.rnn(x)  # (N, L, C)
+        x = self.fc1(x)  # (N, L, d_model)
+        x = x.transpose(0, 1)  # (L, N, d_model)
+        init_level = torch.cat([plus_init.unsqueeze(-1), minus_init.unsqueeze(-1)], axis=1)
+        tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
+        tgt = tgt.unsqueeze(0)  # (1, N, d_model)
+                
+        outputs = []
+        for _ in range(8):
+            tgt = self.decoder(tgt, x)  # (L, N, d_model)
+            out = self.out(tgt[-1]) # (N, 2)
+            outputs.append(out.unsqueeze(1)) # (N, 1, 2)
+            next_tgt = self.embed_tgt(out).unsqueeze(0)  # (1, N, d_model)
+            tgt = torch.cat([tgt, next_tgt], axis=0)  # (L+1, N, d_model)
+        
+        outputs = torch.cat(outputs, axis=1)  # (N, 8, 2)
+        outputs = torch.cat([outputs[:, :, 0], outputs[:, :, 1]], axis=1)  # (N, 16)
+
+        return outputs
+        

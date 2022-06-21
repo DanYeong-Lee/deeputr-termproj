@@ -5,4 +5,4 @@ val_dir: "/data/project/danyoung/deeputr-termproj/data/val.csv"
 test_dir: "/data/project/danyoung/deeputr-termproj/data/test.csv"
 batch_size: 96
 num_workers: 4
-multi: False
+multi: True
