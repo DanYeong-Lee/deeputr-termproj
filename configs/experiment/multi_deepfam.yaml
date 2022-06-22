@@ -34,5 +34,5 @@ model:
   net:
     _target_: src.models.components.deepfam.MultiDeepFam
     kernel_sizes: [6, 9, 12, 15] 
-    out_channels:  960
+    out_channels:  256
     fc_dim: [1024, 1024, 64]
