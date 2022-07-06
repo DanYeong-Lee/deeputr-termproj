@@ -4,8 +4,8 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: multi.yaml
-  - override /model: CNN.yaml
+  - override /datamodule: default.yaml
+  - override /model: CNNRNNTRFM.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,12 +14,9 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "multi_cnn"
+name: "cnnrnntrfm-pool1"
 
 seed: 42
-
-datamodule:
-  batch_size: 128
 
 trainer:
   min_epochs: 1
@@ -27,12 +24,14 @@ trainer:
   gpus: [0]
 
 model:
-  _target_: src.models.model.MultiL2Net
   lr: 5e-4
-  weight_decay: 2.5e-2
-  lr_schedule: True
+  weight_decay: 1e-1
+  l2_idx: [0, 4, 8, 12]
   net:
-    _target_: src.models.components.cnn.MultiCNN
-    kernel_size:  11
-    out_channels:  960
-    fc_dim: [1024, 1024, 64]
+    kernel_sizes: [6, 9, 12, 15]
+    out_channels: 256
+    pool_size: 1
+    rnn_hidden_dim: 256
+    d_model: 256
+    nhead: 8
+    dim_feedforward: 2048

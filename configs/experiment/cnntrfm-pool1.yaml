@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: default.yaml
-  - override /model: TrfmDecode.yaml
+  - override /model: CNNTRFM.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "trfmdecode_nolrsch"
+name: "cnntrfm-pool1"
 
 seed: 42
 
@@ -24,14 +24,15 @@ trainer:
   gpus: [1]
 
 model:
+  _target_: src.models.model.L2Net
   lr: 5e-4
   weight_decay: 1e-1
   l2_idx: [0, 4, 8, 12]
-  lr_schedule: False
   net:
+    _target_: src.models.components.cnntrfm.CNNTRFM
     kernel_sizes: [6, 9, 12, 15]
     out_channels: 256
-    pool_size: 3
+    pool_size: 1
     d_model: 256
     nhead: 8
     dim_feedforward: 2048

@@ -1,5 +1,5 @@
 
-experiments = ["multi_cnntrfm", "multi_cnnrnntrfm"]
+experiments = ["cnntrfm-pool1", "cnnrnntrfm-pool1"]
 seeds = list(range(10))
 
 ALL = expand("logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt", experiment=experiments, seed=seeds)
