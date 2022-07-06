@@ -1,3 +1,4 @@
+notebooks/
 .snakemake/
 
 # Byte-compiled / optimized / DLL files

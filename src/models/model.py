@@ -15,7 +15,8 @@ class BaseNet(pl.LightningModule):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
-        lr_schedule: bool = True
+        lr_schedule: bool = True,
+        lr_stepsize: int = 3
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["net"])
@@ -75,7 +76,7 @@ class BaseNet(pl.LightningModule):
         if self.hparams.lr_schedule:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
                 optimizer,
-                milestones=range(9, 50, 3),
+                milestones=range(9, 50, self.hparams.lr_stepsize),
                 gamma=(1/np.exp(1)),
                 verbose=True
             )
@@ -91,9 +92,10 @@ class MultiNet(BaseNet):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
-        lr_schedule: bool = True
+        lr_schedule: bool = True,
+        lr_stepsize: int = 3
     ):
-        super().__init__(net, lr, weight_decay, lr_schedule)
+        super().__init__(net, lr, weight_decay, lr_schedule, lr_stepsize)
         
     def forward(self, x, plus_init, minus_init):
         return self.net(x, plus_init, minus_init)
@@ -114,9 +116,10 @@ class L2Net(BaseNet):
         lr: float = 5e-4,
         weight_decay: float = 0,
         lr_schedule: bool = True,
-        l2_idx: List[int] = [0]
+        l2_idx: List[int] = [0],
+        lr_stepsize: int = 3
     ):
-        super().__init__(net, lr, weight_decay, lr_schedule)
+        super().__init__(net, lr, weight_decay, lr_schedule, lr_stepsize)
         self.l2_idx = l2_idx
         
         
@@ -143,9 +146,10 @@ class MultiL2Net(BaseNet):
         lr: float = 5e-4,
         weight_decay: float = 0,
         lr_schedule: bool = True,
-        l2_idx: List[int] = [0]
+        l2_idx: List[int] = [0],
+        lr_stepsize: int = 3
     ):
-        super().__init__(net, lr, weight_decay, lr_schedule)
+        super().__init__(net, lr, weight_decay, lr_schedule, lr_stepsize)
         self.l2_idx = l2_idx
     
     def forward(self, x, plus_init, minus_init):
@@ -183,9 +187,10 @@ class RMSpropNet(BaseNet):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
-        lr_schedule: bool = True
+        lr_schedule: bool = True,
+        lr_stepsize: int = 3
     ):
-        super().__init__(net, lr, weight_decay, lr_schedule)
+        super().__init__(net, lr, weight_decay, lr_schedule, lr_stepsize)
     
     def configure_optimizers(self):
         optimizer = torch.optim.RMSprop(
@@ -196,7 +201,7 @@ class RMSpropNet(BaseNet):
         if self.hparams.lr_schedule:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
                 optimizer,
-                milestones=range(9, 50, 3),
+                milestones=range(9, 50, self.hparams.lr_stepsize),
                 gamma=(1/np.exp(1)),
                 verbose=True
             )
@@ -212,9 +217,10 @@ class MultiNAdamNet(MultiNet):
         net: nn.Module,
         lr: float = 5e-4,
         weight_decay: float = 0,
-        lr_schedule: bool = True
+        lr_schedule: bool = True,
+        lr_stepsize: int = 3
     ):
-        super().__init__(net, lr, weight_decay, lr_schedule)
+        super().__init__(net, lr, weight_decay, lr_schedule, lr_stepsize)
         
     def configure_optimizers(self):
         optimizer = torch.optim.NAdam(
@@ -225,7 +231,7 @@ class MultiNAdamNet(MultiNet):
         if self.hparams.lr_schedule:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
                 optimizer,
-                milestones=range(9, 50, 3),
+                milestones=range(9, 50, self.hparams.lr_stepsize),
                 gamma=(1/np.exp(1)),
                 verbose=True
             )
