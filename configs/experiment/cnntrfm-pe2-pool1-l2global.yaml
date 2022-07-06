@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: default.yaml
-  - override /model: CNNTRFM-PE.yaml
+  - override /model: CNNTRFM-PE2.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "cnntrfm-pe2-pool1"
+name: "cnntrfm-pe2-pool1-l2global"
 
 seed: 42
 
@@ -28,10 +28,9 @@ trainer:
   gpus: [1]
 
 model:
-  _target_: src.models.model.L2Net
+  _target_: src.models.model.BaseNet
   lr: 5e-4
-  weight_decay: 1e-1
-  l2_idx: [0, 4, 8, 12]
+  weight_decay: 1e-4
   net:
     _target_: src.models.components.cnntrfm-pe.CNNTRFM_PE2
     kernel_sizes: [6, 9, 12, 15]

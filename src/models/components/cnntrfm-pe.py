@@ -169,7 +169,7 @@ class CNNTRFM_PE2(nn.Module):
             out = self.out(out_tgt[-1]) # (N, 1)
             outputs.append(out)
             next_tgt = self.embed_tgt(out).unsqueeze(0)  # (1, N, d_model)
-            tgt = torch.cat([tgt, next_tgt], axis=0)  # (L+1, N, d_model)
+            tgt = torch.cat([tgt.transpose(0, 1), next_tgt], axis=0)  # (L+1, N, d_model)
         
         outputs = torch.cat(outputs, axis=1)  # (N, 8)
 

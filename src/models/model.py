@@ -71,7 +71,7 @@ class BaseNet(pl.LightningModule):
         optimizer = torch.optim.Adam(
             self.parameters(), 
             lr=self.hparams.lr, 
-            weight_decay=0
+            weight_decay=self.hparams.weight_decay
         )
         if self.hparams.lr_schedule:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -137,6 +137,24 @@ class L2Net(BaseNet):
         self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
         
         return loss
+    
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(
+            self.parameters(), 
+            lr=self.hparams.lr, 
+            weight_decay=0
+        )
+        if self.hparams.lr_schedule:
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=range(9, 50, self.hparams.lr_stepsize),
+                gamma=(1/np.exp(1)),
+                verbose=True
+            )
+
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
     
 
 class MultiL2Net(BaseNet):
