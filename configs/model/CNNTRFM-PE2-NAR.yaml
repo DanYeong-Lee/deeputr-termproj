@@ -1,4 +1,4 @@
-_target_: src.models.model.BaseNet
+_target_: src.models.trfm.BaseNet
 lr: 5e-4
 weight_decay: 1e-1
 lr_schedule: True
