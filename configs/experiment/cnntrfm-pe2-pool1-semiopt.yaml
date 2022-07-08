@@ -14,13 +14,13 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "cnntrfm-pe2-pool1-oddconv"
+name: "cnntrfm-pe2-pool1-semiopt"
 
 seed: 42
 
 
 datamodule:
-  batch_size: 96
+  batch_size: 32
 
 trainer:
   min_epochs: 1
@@ -30,13 +30,13 @@ trainer:
 model:
   _target_: src.models.model.L2Net
   lr: 5e-4
-  weight_decay: 1e-1
+  weight_decay: 0.05
   l2_idx: [0, 4, 8, 12]
   net:
     _target_: src.models.components.cnntrfm_pe.CNNTRFM_PE2
-    kernel_sizes: [7, 9, 11, 13]
-    out_channels: 256
+    kernel_sizes: [6, 9, 12, 15]
+    out_channels: 512
     pool_size: 1
-    d_model: 256
+    d_model: 64
     nhead: 8
-    dim_feedforward: 2048
+    dim_feedforward: 512

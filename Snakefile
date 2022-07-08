@@ -1,5 +1,5 @@
 
-experiments = ["cnntrfm-pool1", "cnnrnntrfm-pool1"]
+experiments = ["cnntrfm-pe2-pool1-oddconv"]
 seeds = list(range(10))
 
 ALL = expand("logs/experiments/runs/{experiment}/ckpts/seed{seed}.ckpt", experiment=experiments, seed=seeds)
@@ -14,5 +14,5 @@ rule train:
     shell:
         "python train.py "
         "experiment={wildcards.experiment} "
-        "trainer.gpus=[1] "
+        "trainer.gpus=[0] "
         "seed={wildcards.seed}"

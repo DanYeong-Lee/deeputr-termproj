@@ -33,7 +33,7 @@ model:
   weight_decay: 1e-1
   l2_idx: [0, 4, 8, 12]
   net:
-    _target_: src.models.components.cnntrfm-pe.CNNTRFM_PE2
+    _target_: src.models.components.cnntrfm_pe.CNNTRFM_PE2
     kernel_sizes: [6, 9, 12, 15]
     out_channels: 256
     pool_size: 1

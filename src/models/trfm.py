@@ -53,7 +53,7 @@ class BaseNet(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        loss, preds, targets = self.step(batch)
+        loss, preds, targets = self.infer_step(batch)
         self.val_loss.update(preds, targets)
         metrics = {"val/loss": loss}
         self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
@@ -65,12 +65,12 @@ class BaseNet(pl.LightningModule):
         self.val_loss.reset()
         
     def test_step(self, batch, batch_idx):
-        loss, preds, targets = self.step(batch)
+        loss, preds, targets = self.infer_step(batch)
         metrics = {"test/loss": loss}
         self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
         
     def predict_step(self, batch, batch_idx):
-        _, preds, targets = self.step(batch)
+        _, preds, targets = self.infer_step(batch)
         
         return preds, targets
     

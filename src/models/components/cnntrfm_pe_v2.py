@@ -89,7 +89,7 @@ class Encoder(nn.Module):
         
         return x
 
-class CNNTRFM_PE(nn.Module):
+class CNNTRFM_v2(nn.Module):
     def __init__(
         self,
         kernel_sizes: List = [6, 9, 12, 15],
@@ -115,59 +115,16 @@ class CNNTRFM_PE(nn.Module):
         x = self.fc1(x)  # (N, L, d_model)
         x = x + self.pe(x)  # Positional Encoding
         x = x.transpose(0, 1)  # (L, N, d_model)
+        
         tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
         tgt = tgt.unsqueeze(0)  # (1, N, d_model)
         
-        outputs = []
-        for _ in range(8):
-            tgt = self.decoder(tgt, x)  # (L, N, d_model)
-            out = self.out(tgt[-1]) # (N, 1)
-            outputs.append(out)
-            next_tgt = self.embed_tgt(out).unsqueeze(0)  # (1, N, d_model)
-            tgt = torch.cat([tgt, next_tgt], axis=0)  # (L+1, N, d_model)
-        
-        outputs = torch.cat(outputs, axis=1)  # (N, 8)
-
-        return outputs
-    
-    
-class CNNTRFM_PE2(nn.Module):
-    def __init__(
-        self,
-        kernel_sizes: List = [6, 9, 12, 15],
-        out_channels: int = 256,
-        pool_size: int = 3,
-        d_model: int = 256,
-        nhead: int = 8,
-        dim_feedforward: int = 2048
-    ):
-        super().__init__()
-        self.encoder = Encoder(kernel_sizes, out_channels, pool_size)
-        self.fc1 = nn.Linear(len(kernel_sizes) * out_channels, d_model)
-        self.pe = PositionalEncoding1D(d_model)
-        self.decoder = nn.TransformerDecoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward)
-        self.embed_tgt = nn.Linear(1, d_model)
-        self.out = nn.Linear(d_model, 1)
-        
-        
-    def forward(self, x, init_level):
-        # x: (N, L, C)
-        x = self.encoder(x)  # (N, C, L)
-        x = x.transpose(1, 2)  # (N, L, C)
-        x = self.fc1(x)  # (N, L, d_model)
-        x = x + self.pe(x)  # Positional Encoding
-        x = x.transpose(0, 1)  # (L, N, d_model)
-        tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
-        tgt = tgt.unsqueeze(0)  # (1, N, d_model)
-        
-        outputs = []
         for _ in range(8):
             tgt = tgt.transpose(0, 1)  # (N, L, C)
             in_tgt = tgt + self.pe(tgt)  # (N, L, C)
             in_tgt = in_tgt.transpose(0, 1)
             out_tgt = self.decoder(in_tgt, x)  # (L, N, d_model)
             out = self.out(out_tgt[-1]) # (N, 1)
-            outputs.append(out)
             next_tgt = self.embed_tgt(out).unsqueeze(0)  # (1, N, d_model)
             tgt = torch.cat([tgt.transpose(0, 1), next_tgt], axis=0)  # (L+1, N, d_model)
         
@@ -175,48 +132,4 @@ class CNNTRFM_PE2(nn.Module):
 
         return outputs
     
-    
-class CNNTRFM_PE2_GELU(nn.Module):
-    def __init__(
-        self,
-        kernel_sizes: List = [6, 9, 12, 15],
-        out_channels: int = 256,
-        pool_size: int = 3,
-        d_model: int = 256,
-        nhead: int = 8,
-        dim_feedforward: int = 2048
-    ):
-        super().__init__()
-        self.encoder = Encoder(kernel_sizes, out_channels, pool_size)
-        self.fc1 = nn.Linear(len(kernel_sizes) * out_channels, d_model)
-        self.pe = PositionalEncoding1D(d_model)
-        self.decoder = nn.TransformerDecoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward, activation="gelu")
-        self.embed_tgt = nn.Linear(1, d_model)
-        self.out = nn.Linear(d_model, 1)
-        
-        
-    def forward(self, x, init_level):
-        # x: (N, L, C)
-        x = self.encoder(x)  # (N, C, L)
-        x = x.transpose(1, 2)  # (N, L, C)
-        x = self.fc1(x)  # (N, L, d_model)
-        x = x + self.pe(x)  # Positional Encoding
-        x = x.transpose(0, 1)  # (L, N, d_model)
-        tgt = self.embed_tgt(init_level.unsqueeze(-1))  # (N, d_model)
-        tgt = tgt.unsqueeze(0)  # (1, N, d_model)
-        
-        outputs = []
-        for _ in range(8):
-            tgt = tgt.transpose(0, 1)  # (N, L, C)
-            in_tgt = tgt + self.pe(tgt)  # (N, L, C)
-            in_tgt = in_tgt.transpose(0, 1)
-            out_tgt = self.decoder(in_tgt, x)  # (L, N, d_model)
-            out = self.out(out_tgt[-1]) # (N, 1)
-            outputs.append(out)
-            next_tgt = self.embed_tgt(out).unsqueeze(0)  # (1, N, d_model)
-            tgt = torch.cat([tgt.transpose(0, 1), next_tgt], axis=0)  # (L+1, N, d_model)
-        
-        outputs = torch.cat(outputs, axis=1)  # (N, 8)
-
-        return outputs
     

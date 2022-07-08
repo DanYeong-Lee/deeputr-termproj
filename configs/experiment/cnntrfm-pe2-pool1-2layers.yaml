@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "cnntrfm-pe2-pool1-oddconv"
+name: "cnntrfm-pe2-pool1-2layers"
 
 seed: 42
 
@@ -34,9 +34,11 @@ model:
   l2_idx: [0, 4, 8, 12]
   net:
     _target_: src.models.components.cnntrfm_pe.CNNTRFM_PE2
-    kernel_sizes: [7, 9, 11, 13]
+    kernel_sizes: [6, 9, 12, 15]
     out_channels: 256
     pool_size: 1
     d_model: 256
     nhead: 8
     dim_feedforward: 2048
+    dropout: 0.1
+    n_layers: 2

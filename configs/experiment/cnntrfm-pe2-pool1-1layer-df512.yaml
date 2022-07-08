@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: default.yaml
-  - override /model: CNNTRFM-PE.yaml
+  - override /model: CNNTRFM-PE2-Decoder.yaml
   - override /callbacks: default.yaml
   #- override /logger: wandb.yaml
   - override /trainer: default.yaml
@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "cnntrfm-pe2-pool1-oddconv"
+name: "cnntrfm-pe2-pool1-1layer-df512"
 
 seed: 42
 
@@ -33,10 +33,12 @@ model:
   weight_decay: 1e-1
   l2_idx: [0, 4, 8, 12]
   net:
-    _target_: src.models.components.cnntrfm_pe.CNNTRFM_PE2
-    kernel_sizes: [7, 9, 11, 13]
+    _target_: src.models.components.cnntrfm_pe.CNNTRFM_PE2_Decoder
+    kernel_sizes: [6, 9, 12, 15]
     out_channels: 256
     pool_size: 1
     d_model: 256
     nhead: 8
-    dim_feedforward: 2048
+    dim_feedforward: 512
+    dropout: 0.1
+    n_layers: 1
